@@ -3,3 +3,10 @@ Cargo.lock.bak
 *.log
 .DS_Store
 Thumbs.db
+
+
+# Added by cargo
+#
+# already existing elements were commented out
+
+#/target
