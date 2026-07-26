@@ -143,9 +143,6 @@ jobs:
           name: immichsync-windows
           path: release-assets
 
-      - name: Stage installer scripts
-        run: cp installers/install.sh release-assets/
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -153,6 +150,5 @@ jobs:
           files: |
             release-assets/*.deb
             release-assets/*-windows-setup.exe
-            release-assets/install.sh
           generate_release_notes: true
           fail_on_unmatched_files: true

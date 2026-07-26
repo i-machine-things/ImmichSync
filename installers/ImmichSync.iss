@@ -37,7 +37,7 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [Run]
 Filename: "{cmd}"; \
-    Parameters: "/K ""{app}\{#MyAppExeName}"" init && ""{app}\{#MyAppExeName}"" service install"; \
+    Parameters: "/K ""{app}\{#MyAppExeName}"" run && ""{app}\{#MyAppExeName}"" service install"; \
     Description: "Run setup now (server URL, API key, photos folder) and enable the nightly schedule"; \
     Flags: postinstall skipifsilent unchecked
 

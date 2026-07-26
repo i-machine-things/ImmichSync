@@ -8,10 +8,11 @@ that's already been uploaded manually — nothing gets re-uploaded.
 
 ## Install
 
-**Linux** (installs the `.deb` via `dpkg`, then runs setup):
+**Linux** — install is handled entirely by `apt`/`dpkg`, no wrapper script:
 
 ```bash
-curl -fsSL https://github.com/i-machine-things/ImmichSync/releases/latest/download/install.sh | bash
+curl -fsSLO https://github.com/i-machine-things/ImmichSync/releases/latest/download/immichsync-<version>-linux-amd64.deb
+sudo apt install ./immichsync-<version>-linux-amd64.deb
 ```
 
 **Windows**: download `ImmichSync-<version>-windows-setup.exe` from the
@@ -19,12 +20,19 @@ curl -fsSL https://github.com/i-machine-things/ImmichSync/releases/latest/downlo
 and run it. The installer offers to run setup and enable the nightly
 schedule at the end.
 
+Either way, there's no separate setup step to remember: the first time you
+run any command (`immichsync run`, `immichsync status`, `immichsync service
+install`) with no config yet and a terminal attached, it walks you through
+setup (server URL, API key, photos directory) automatically before
+continuing. Unattended invocations (the nightly timer/scheduled task) fail
+with a clear error instead of hanging on a prompt if setup was never done.
+
 ## Usage
 
 ```bash
-immichsync init              # interactive setup: server URL, API key, photos dir
+immichsync init              # (re-)run setup explicitly: server URL, API key, photos dir
 immichsync run --dry-run     # preview a sync without uploading anything
-immichsync run               # sync now
+immichsync run               # sync now (prompts for setup first if not configured yet)
 immichsync status            # show config, log tail
 immichsync service install   # schedule a nightly run (systemd user timer / Task Scheduler)
 immichsync service uninstall # remove the nightly schedule
