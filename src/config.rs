@@ -39,6 +39,10 @@ pub struct Config {
 }
 
 impl Config {
+    pub fn exists() -> Result<bool> {
+        Ok(config_path()?.exists())
+    }
+
     pub fn load() -> Result<Config> {
         let path = config_path()?;
         if !path.exists() {

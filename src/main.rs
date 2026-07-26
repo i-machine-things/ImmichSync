@@ -14,7 +14,7 @@ use cli::{Cli, Command, ServiceCommand, UpdateCommand};
 use config::Config;
 use immich::ImmichClient;
 use logging::Logger;
-use std::io::Write;
+use std::io::{IsTerminal, Write};
 use std::path::PathBuf;
 
 fn main() -> Result<()> {
@@ -23,10 +23,31 @@ fn main() -> Result<()> {
         Command::Init => cmd_init(),
         Command::Run { dry_run } => cmd_run(dry_run),
         Command::Status => cmd_status(),
-        Command::Service(ServiceCommand::Install { hour }) => service::install(hour),
+        Command::Service(ServiceCommand::Install { hour }) => {
+            ensure_config()?;
+            service::install(hour)
+        }
         Command::Service(ServiceCommand::Uninstall) => service::uninstall(),
         Command::Update(UpdateCommand::Check) => cmd_update_check(),
     }
+}
+
+/// Loads the config, running the interactive setup wizard first if none
+/// exists yet and we're attached to a terminal. Unattended invocations (the
+/// nightly scheduled task/timer) get a clear error instead of hanging on a
+/// prompt with nowhere to type.
+fn ensure_config() -> Result<Config> {
+    if Config::exists()? {
+        return Config::load();
+    }
+    if !std::io::stdin().is_terminal() {
+        anyhow::bail!(
+            "no config found at {} — run `immichsync init` (or any command) from a terminal to set up",
+            config::config_dir()?.join("config.toml").display()
+        );
+    }
+    println!("No configuration found yet — let's set it up.\n");
+    run_setup_wizard()
 }
 
 fn cmd_update_check() -> Result<()> {
@@ -64,9 +85,7 @@ fn expand_tilde(path: &str) -> PathBuf {
     PathBuf::from(path)
 }
 
-fn cmd_init() -> Result<()> {
-    println!("ImmichSync setup\n");
-
+fn run_setup_wizard() -> Result<Config> {
     let default_pictures = dirs_pictures();
     let server_url = prompt("Immich server URL", Some("http://immich.home"))?;
     let api_key = rpassword::prompt_password("Immich API key: ")?;
@@ -91,16 +110,22 @@ fn cmd_init() -> Result<()> {
         photos_dirs: vec![photos_dir],
     };
     config.save()?;
+    println!("\nSaved config to {}.", config::config_dir()?.display());
+    Ok(config)
+}
+
+fn cmd_init() -> Result<()> {
+    println!("ImmichSync setup\n");
+    run_setup_wizard()?;
     println!(
-        "\nSaved config to {}.\nRun `immichsync run --dry-run` to preview a sync, or \
-         `immichsync service install` to schedule nightly backups.",
-        config::config_dir()?.display()
+        "Run `immichsync run --dry-run` to preview a sync, or `immichsync service install` \
+         to schedule nightly backups."
     );
     Ok(())
 }
 
 fn cmd_run(dry_run: bool) -> Result<()> {
-    let config = Config::load()?;
+    let config = ensure_config()?;
     let log = Logger::to_file(&config::log_path()?)?;
     if dry_run {
         log.log("starting sync (dry-run)");
@@ -138,7 +163,7 @@ fn cmd_status() -> Result<()> {
     println!("Config dir: {}", config_dir.display());
     println!("Log file:   {}", log_path.display());
 
-    match Config::load() {
+    match ensure_config() {
         Ok(cfg) => {
             println!("Server:     {}", cfg.server_url);
             println!("Photos dirs:");
