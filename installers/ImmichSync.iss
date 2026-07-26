@@ -69,19 +69,37 @@ begin
 end;
 
 procedure RemoveFromPath(AppDir: string);
+{ Rebuilds PATH from its ';'-separated entries, dropping any that match AppDir
+  case-insensitively. Works regardless of whether AppDir is the first, middle,
+  last, or only entry — unlike a padded substring search, which misses the
+  first-entry case since there's no leading separator to match against. }
 var
-  EnvPath: string;
-  SearchStr: string;
+  EnvPath, Entry, Rebuilt: string;
   P: Integer;
 begin
   if not RegQueryStringValue(HKEY_CURRENT_USER, UserEnvKey, 'Path', EnvPath) then Exit;
-  SearchStr := ';' + AppDir;
-  P := Pos(LowerCase(SearchStr + ';'), LowerCase(EnvPath + ';'));
-  if P > 0 then
+  Rebuilt := '';
+  while EnvPath <> '' do
   begin
-    Delete(EnvPath, P, Length(SearchStr));
-    RegWriteExpandStringValue(HKEY_CURRENT_USER, UserEnvKey, 'Path', EnvPath);
+    P := Pos(';', EnvPath);
+    if P > 0 then
+    begin
+      Entry := Copy(EnvPath, 1, P - 1);
+      Delete(EnvPath, 1, P);
+    end else
+    begin
+      Entry := EnvPath;
+      EnvPath := '';
+    end;
+    if (Entry <> '') and (CompareText(Entry, AppDir) <> 0) then
+    begin
+      if Rebuilt = '' then
+        Rebuilt := Entry
+      else
+        Rebuilt := Rebuilt + ';' + Entry;
+    end;
   end;
+  RegWriteExpandStringValue(HKEY_CURRENT_USER, UserEnvKey, 'Path', Rebuilt);
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
