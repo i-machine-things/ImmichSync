@@ -42,7 +42,7 @@ pub enum ServiceCommand {
     /// Install a nightly schedule (systemd user timer on Linux, Task Scheduler on Windows).
     Install {
         /// Hour of day (0-23, local time) to run the nightly sync.
-        #[arg(long, default_value_t = 2)]
+        #[arg(long, default_value_t = 2, value_parser = clap::value_parser!(u8).range(0..=23))]
         hour: u8,
     },
     /// Remove the nightly schedule.

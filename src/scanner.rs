@@ -54,6 +54,16 @@ pub fn walk(root: &Path) -> Result<Vec<FoundFile>> {
 }
 
 fn is_hidden(entry: &walkdir::DirEntry) -> bool {
+    #[cfg(windows)]
+    {
+        use std::os::windows::fs::MetadataExt;
+        const FILE_ATTRIBUTE_HIDDEN: u32 = 0x2;
+        if let Ok(meta) = entry.metadata()
+            && meta.file_attributes() & FILE_ATTRIBUTE_HIDDEN != 0
+        {
+            return true;
+        }
+    }
     entry
         .file_name()
         .to_str()

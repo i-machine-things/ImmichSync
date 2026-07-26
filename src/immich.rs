@@ -5,6 +5,11 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::time::Duration;
 
+/// Large videos over typical home upload bandwidth can take much longer than
+/// the client's default short timeout (used for quick metadata calls), so
+/// uploads get their own longer per-request timeout.
+const UPLOAD_TIMEOUT: Duration = Duration::from_secs(30 * 60);
+
 pub struct ImmichClient {
     base_url: String,
     api_key: String,
@@ -129,8 +134,6 @@ impl ImmichClient {
             .file_name()
             .map(|n| n.to_string_lossy().to_string())
             .unwrap_or_else(|| "asset".to_string());
-        let bytes = std::fs::read(path).with_context(|| format!("reading {}", path.display()))?;
-        let part = multipart::Part::bytes(bytes).file_name(filename.clone());
         let form = multipart::Form::new()
             .text(
                 "fileCreatedAt",
@@ -141,13 +144,15 @@ impl ImmichClient {
                 modified_at.format("%Y-%m-%dT%H:%M:%S%.3fZ").to_string(),
             )
             .text("filename", filename)
-            .part("assetData", part);
+            .file("assetData", path)
+            .with_context(|| format!("reading {}", path.display()))?;
 
         let resp = self
             .http
             .post(format!("{}/assets", self.base_url))
             .header("x-api-key", &self.api_key)
             .header("x-immich-checksum", checksum_hex)
+            .timeout(UPLOAD_TIMEOUT)
             .multipart(form)
             .send()
             .with_context(|| format!("uploading {}", path.display()))?;

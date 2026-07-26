@@ -78,16 +78,19 @@ pub fn check_if_due(cache_path: &Path) -> Option<UpdateInfo> {
         return None;
     }
 
-    let result = check_now().ok().flatten();
-
-    let cache = CheckCache {
-        last_checked_unix: now,
-    };
-    if let Ok(text) = serde_json::to_string(&cache) {
-        let _ = std::fs::write(cache_path, text);
+    // Only stamp the cache on a successful check — otherwise a transient
+    // network failure would suppress retries for the rest of the interval
+    // instead of just skipping this one run.
+    let outcome = check_now();
+    if outcome.is_ok() {
+        let cache = CheckCache {
+            last_checked_unix: now,
+        };
+        if let Ok(text) = serde_json::to_string(&cache) {
+            let _ = std::fs::write(cache_path, text);
+        }
     }
-
-    result
+    outcome.ok().flatten()
 }
 
 #[cfg(test)]

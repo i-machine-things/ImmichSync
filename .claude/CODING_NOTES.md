@@ -83,3 +83,24 @@ This note was created based on issues encountered with PyInstaller executables r
 - **Keep lines under 120 characters.** Long lines are hard to review side-by-side in a diff or split editor pane, and tend to signal a line doing too many things at once. Wrap or break up expressions rather than letting them run long.
 - **Add docstrings to explain code.** Focus on *why* a function/class exists or *why* it does something non-obvious — the code itself already shows *what* it does. A docstring worth writing usually covers intent, assumptions, edge cases, or a gotcha a future reader would otherwise have to rediscover the hard way.
 - **Strip docstrings when building a release.** Release builds don't need internal rationale shipped alongside the binary — it bloats the artifact and can leak implementation notes you didn't mean to publish. Run Python with `-OO` (or an equivalent build step) to drop docstrings and assertions from the compiled output before packaging.
+
+## GitHub Actions Security (CodeRabbit, ImmichSync PR#1)
+
+- **Set `persist-credentials: false` on every `actions/checkout` step** unless that job actually needs to push back to the repo. Otherwise the `GITHUB_TOKEN` sits in the local git config for the rest of the job — unnecessary exposure surface (zizmor's `artipacked` check flags this).
+- **Declare a workflow-level `permissions:` block** (e.g. `contents: read`) so jobs don't implicitly inherit a broader default token scope. Jobs that need more (e.g. `contents: write` to create a release) declare it at the job level, which overrides the top-level default for that job only.
+- **Don't re-template `${{ env.X }}` into a shell/pwsh script body** when `X` is already a job/step-level env var — it's already available as `$env:X`/`$X` directly, and re-interpolating it into the script text is an unnecessary template/script-injection surface (zizmor's `template-injection` check).
+
+## Inno Setup PATH Management
+
+- **When removing a directory from PATH, pad both sides before searching, or better, tokenize and filter.** A search for `;AppDir;` against `EnvPath + ';'` misses the case where `AppDir` is the *first* PATH entry (no leading separator to match). Splitting on `;`, filtering out the matching entry (case-insensitively), and rejoining is more robust than position/padding arithmetic.
+
+## Rust CLI Patterns
+
+- **Constrain numeric CLI args to their valid domain with clap's `value_parser!(T).range(..)`**, not just the type's full range — e.g. an "hour of day" field typed `u8` still accepts up to 255 unless explicitly range-limited to `0..=23`.
+- **Create secret-bearing files (config with API keys, etc.) with restrictive permissions from the moment of creation** (`OpenOptions::mode(0o600)` on Unix), not write-then-chmod — the latter leaves a TOCTOU window where the file is readable at the OS-default mode.
+- **Give upload/large-payload HTTP calls their own longer timeout**, separate from the client's default timeout used for quick metadata calls — a shared short timeout can abort a large file upload over slow home upload bandwidth well before it finishes.
+- **Stream large file uploads from disk** (e.g. `multipart::Form::file(name, path)`) instead of `std::fs::read` + `Part::bytes`, so uploading a multi-GB video doesn't buffer the whole thing in memory first.
+- **Don't let one bad item abort a whole batch loop.** In a loop over independent inputs (e.g. multiple configured directories), catch and log per-item errors and `continue` rather than propagating with `?` — one inaccessible directory shouldn't block every other directory's nightly backup.
+- **Cap/rotate append-only log files used by long-lived scheduled jobs** (systemd timer, Task Scheduler) — they grow unbounded over the life of an install otherwise. A simple single-backup rotation (rename to `.1` past a size threshold) is enough; no need for a full rotation library.
+- **Only persist a "last checked" cache timestamp on success**, not unconditionally — otherwise a single transient network failure suppresses retries for the whole cache interval instead of just that one run.
+- **Dot-prefix alone doesn't cover Windows hidden files.** Also check the `FILE_ATTRIBUTE_HIDDEN` bit via `MetadataExt::file_attributes()` on Windows, or files like `Thumbs.db`/`desktop.ini` won't be filtered on that platform.

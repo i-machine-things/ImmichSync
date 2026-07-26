@@ -65,21 +65,30 @@ impl Config {
                 .with_context(|| format!("creating {}", parent.display()))?;
         }
         let text = toml::to_string_pretty(self)?;
-        std::fs::write(&path, text).with_context(|| format!("writing {}", path.display()))?;
-        restrict_permissions(&path)?;
-        Ok(())
+        write_config_file(&path, &text)
     }
 }
 
+/// Writes the config (which holds a plaintext API key) with restrictive
+/// permissions from the moment the file is created, rather than writing with
+/// default permissions and narrowing them afterwards — the latter leaves a
+/// window where the secret is readable at the OS-default file mode.
 #[cfg(unix)]
-fn restrict_permissions(path: &std::path::Path) -> Result<()> {
-    use std::os::unix::fs::PermissionsExt;
-    let perms = std::fs::Permissions::from_mode(0o600);
-    std::fs::set_permissions(path, perms)
-        .with_context(|| format!("restricting permissions on {}", path.display()))
+fn write_config_file(path: &std::path::Path, text: &str) -> Result<()> {
+    use std::io::Write;
+    use std::os::unix::fs::OpenOptionsExt;
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .mode(0o600)
+        .open(path)
+        .with_context(|| format!("writing {}", path.display()))?;
+    file.write_all(text.as_bytes())
+        .with_context(|| format!("writing {}", path.display()))
 }
 
 #[cfg(not(unix))]
-fn restrict_permissions(_path: &std::path::Path) -> Result<()> {
-    Ok(())
+fn write_config_file(path: &std::path::Path, text: &str) -> Result<()> {
+    std::fs::write(path, text).with_context(|| format!("writing {}", path.display()))
 }

@@ -33,7 +33,14 @@ pub fn run(
             continue;
         }
         log.log(&format!("scanning {}", dir.display()));
-        let found = scanner::walk(dir)?;
+        let found = match scanner::walk(dir) {
+            Ok(f) => f,
+            Err(e) => {
+                log.log(&format!("scan failed for {}: {e}", dir.display()));
+                summary.failed += 1;
+                continue;
+            }
+        };
         summary.scanned += found.len();
 
         // Files that need a fresh checksum + server check this run.
