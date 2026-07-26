@@ -3,7 +3,7 @@ name = "immichsync"
 version = "0.1.0"
 edition = "2024"
 description = "Nightly photo backup CLI for Immich"
-license = "MIT"
+license = "GPL-3.0-or-later"
 repository = "https://github.com/i-machine-things/ImmichSync"
 
 [dependencies]

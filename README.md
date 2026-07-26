@@ -63,3 +63,7 @@ Requires Rust (`cargo build --release`). Dependencies: `clap`, `reqwest`
 
 Releases are built by `.github/workflows/release.yml` on `v*` tags: a `.deb`
 package (via `cargo-deb`) for Linux and an Inno Setup installer for Windows.
+
+## License
+
+GPL-3.0-or-later — see [LICENSE](LICENSE).
