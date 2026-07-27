@@ -44,6 +44,39 @@ on Linux, `%APPDATA%\immichsync\config.toml` on Windows) with `0600`
 permissions on Unix, since it holds your Immich API key. Sync state (which
 files are already uploaded) and logs live in the OS data dir alongside it.
 
+## Updates
+
+`immichsync update check` hits GitHub's releases API and prints whether a
+newer version exists. `immichsync run` also does this passively at most once
+every 24h (cached, best-effort — never blocks or fails the sync, and a
+transient network error doesn't suppress the next day's check) and logs a
+one-line note if an update is available.
+
+There's no auto-download or self-replacement — the binary never modifies
+itself, which matters since it usually runs unattended via a scheduled
+task holding your API key. To actually update: download the new `.deb` /
+installer the same way as the initial install (re-running `apt install
+./newfile.deb` upgrades in place; re-running the Windows installer does the
+same). Your config, sync manifest, and logs live outside the install
+directory, so upgrading doesn't touch them.
+
+## Uninstall
+
+**Linux**: `sudo apt remove immichsync`. The package's `prerm` script
+best-effort disables and removes the systemd user timer/service for any user
+that has one installed, so removal doesn't leave a timer pointing at a
+binary that no longer exists. Config/manifest/logs under
+`~/.config/immichsync` and `~/.local/share/immichsync` are left in place —
+delete them yourself if you want a full wipe.
+
+**Windows**: use "Uninstall ImmichSync" from the Start Menu / Apps list. The
+uninstaller runs `immichsync.exe service uninstall` first (removing the
+scheduled task) and removes the app from PATH. Config/data under
+`%APPDATA%\immichsync` / `%LOCALAPPDATA%\immichsync` are left in place.
+
+If you just want to stop the nightly runs without removing the app, use
+`immichsync service uninstall` directly on either platform.
+
 ## How it works
 
 1. Recursively scans the configured photos directory (skipping hidden files

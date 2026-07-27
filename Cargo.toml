@@ -29,8 +29,8 @@ lto = true
 strip = true
 
 [package.metadata.deb]
-maintainer = "Allan <allann2020@gmail.com>"
-copyright = "2026, Allan"
+maintainer = "i-machine-things <allann2020@gmail.com>"
+copyright = "2026, i-machine-things"
 license-file = ["LICENSE", "0"]
 extended-description = """\
 Nightly photo backup CLI for Immich. Uploads new/changed files from a local \
@@ -39,6 +39,7 @@ photos directory to a self-hosted Immich server, using checksum-based dedup \
 depends = "$auto"
 section = "utils"
 priority = "optional"
+maintainer-scripts = "debian"
 assets = [
     ["target/release/immichsync", "usr/bin/", "755"],
     ["README.md", "usr/share/doc/immichsync/README.md", "644"],

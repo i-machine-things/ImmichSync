@@ -1,0 +1,23 @@
+#!/bin/sh
+# Best-effort cleanup of any per-user systemd timer before the binary they
+# point at disappears. Never fails package removal — every step is
+# best-effort, since we're reaching into user sessions from a root-run
+# maintainer script and that can fail for plenty of unrelated reasons
+# (no active session, linger not enabled, etc).
+
+if [ "$1" = "remove" ]; then
+    for home in /root /home/*; do
+        [ -d "$home" ] || continue
+        user="$(basename "$home")"
+        unit_dir="$home/.config/systemd/user"
+        timer="$unit_dir/immichsync.timer"
+        service="$unit_dir/immichsync.service"
+
+        if [ -f "$timer" ]; then
+            runuser -l "$user" -c 'systemctl --user disable --now immichsync.timer' 2>/dev/null || true
+            rm -f "$timer" "$service" 2>/dev/null || true
+        fi
+    done
+fi
+
+exit 0
