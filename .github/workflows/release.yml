@@ -53,7 +53,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.97.1
 
       - uses: Swatinem/rust-cache@v2
 
@@ -61,7 +61,7 @@ jobs:
         run: cargo build --release
 
       - name: Install cargo-deb
-        run: cargo install cargo-deb --locked
+        run: cargo install cargo-deb --version 3.7.0 --locked
 
       - name: Build .deb package
         run: cargo deb --no-build --deb-version "${RELEASE_VERSION#v}"
@@ -93,7 +93,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.97.1
 
       - uses: Swatinem/rust-cache@v2
 
@@ -102,6 +102,10 @@ jobs:
 
       - name: Ensure Inno Setup is available
         shell: pwsh
+        # Left unpinned intentionally: Chocolatey's package listing couldn't be
+        # verified from this environment, and pinning to a guessed version
+        # number risks a hard failure on every future release build, which is
+        # worse than the reproducibility gap this leaves.
         run: |
           if (!(Get-Command iscc -ErrorAction SilentlyContinue)) {
             choco install innosetup --confirm --no-progress

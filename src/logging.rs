@@ -40,13 +40,18 @@ impl Logger {
         let Ok(mut f) = f.lock() else {
             return;
         };
+        let _ = writeln!(f, "{stamped}");
+        // Check after writing, not before: checking first only catches
+        // already-over-cap files from a previous write, leaving the write
+        // that actually crosses the threshold unrotated until some later
+        // call — if that's the last line logged this run, the file stays
+        // over-cap until the next invocation.
         if let Ok(meta) = f.metadata()
             && meta.len() >= MAX_LOG_BYTES
             && let Ok(rotated) = rotate_and_reopen(path)
         {
             *f = rotated;
         }
-        let _ = writeln!(f, "{stamped}");
     }
 }
 
@@ -110,6 +115,30 @@ mod tests {
         assert!(
             active_len < MAX_LOG_BYTES,
             "active log should be small again after rotation, got {active_len} bytes"
+        );
+    }
+
+    #[test]
+    fn rotates_immediately_after_the_crossing_write_with_no_followup_call() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("test.log");
+        let logger = Logger::to_file(&path).unwrap();
+
+        // A single line whose content alone exceeds the cap — after just this
+        // one log() call (no follow-up write), the active file must already
+        // be small again, proving rotation isn't deferred to a later call.
+        let huge_line = "x".repeat(MAX_LOG_BYTES as usize + 1024);
+        logger.log(&huge_line);
+
+        let backup = PathBuf::from(format!("{}.1", path.display()));
+        assert!(
+            backup.exists(),
+            "expected a .1 backup immediately after the crossing write"
+        );
+        let active_len = std::fs::metadata(&path).unwrap().len();
+        assert!(
+            active_len < MAX_LOG_BYTES,
+            "active log should already be small right after the crossing write, got {active_len} bytes"
         );
     }
 }
