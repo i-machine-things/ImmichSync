@@ -108,3 +108,9 @@ This note was created based on issues encountered with PyInstaller executables r
 - **When treating "file doesn't exist" as a no-op, match `ErrorKind::NotFound` specifically** rather than swallowing every `metadata()`/`open()` error — a permission-denied error silently treated the same way hides the real cause.
 - **Only persist a "last checked" cache timestamp on success**, not unconditionally — otherwise a single transient network failure suppresses retries for the whole cache interval instead of just that one run.
 - **Dot-prefix alone doesn't cover Windows hidden files.** Also check the `FILE_ATTRIBUTE_HIDDEN` bit via `MetadataExt::file_attributes()` on Windows, or files like `Thumbs.db`/`desktop.ini` won't be filtered on that platform.
+- **In recursive walks, skip nested IO errors; only fail at root.** Check `walkdir::Error::depth()`:
+  depth 0 → propagate (root unreadable); depth > 0 → `continue`. Same policy for
+  `DirEntry::metadata()` failures using `entry.depth()`.
+- **Reject root drives as photo directories during setup.** `PathBuf::parent().is_none()`
+  identifies `C:\` / `/`. Canonicalize first (resolves `..` and symlinks), but store the
+  original path to avoid Windows `\\?\` prefix in config.

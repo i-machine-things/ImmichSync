@@ -23,11 +23,26 @@ pub fn walk(root: &Path) -> Result<Vec<FoundFile>> {
         .into_iter()
         .filter_entry(|e| e.depth() == 0 || !is_hidden(e))
     {
-        let entry = entry.with_context(|| format!("walking {}", root.display()))?;
+        let entry = match entry {
+            Ok(e) => e,
+            Err(e) => {
+                if e.depth() == 0 {
+                    // The root photos_dir itself is unreadable — propagate as a fatal error.
+                    return Err(e).with_context(|| format!("walking {}", root.display()));
+                }
+                // A subdirectory or file inside the tree is inaccessible (e.g.,
+                // permission denied on a system folder). Skip it and continue.
+                continue;
+            }
+        };
         if !entry.file_type().is_file() {
             continue;
         }
-        let meta = entry.metadata()?;
+        let meta = match entry.metadata() {
+            Ok(m) => m,
+            Err(_) if entry.depth() > 0 => continue,
+            Err(e) => return Err(e).with_context(|| format!("walking {}", root.display())),
+        };
         if meta.len() == 0 {
             continue;
         }

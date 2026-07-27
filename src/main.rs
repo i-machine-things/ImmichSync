@@ -95,6 +95,18 @@ fn run_setup_wizard() -> Result<Config> {
     if !photos_dir.is_dir() {
         anyhow::bail!("{} is not a directory", photos_dir.display());
     }
+    // Canonicalize to resolve symlinks and `..` components before the root check,
+    // but keep the original expanded path for the config so we don't store the
+    // `\\?\`-prefixed form that fs::canonicalize returns on Windows.
+    let canonical = std::fs::canonicalize(&photos_dir)
+        .with_context(|| format!("resolving {}", photos_dir.display()))?;
+    if canonical.parent().is_none() {
+        anyhow::bail!(
+            "'{}' is a root drive — specify a photos directory (e.g. '{}')",
+            photos_dir.display(),
+            photos_dir.join("Pictures").display()
+        );
+    }
 
     println!("\nChecking connection to {server_url} ...");
     let client = ImmichClient::new(&server_url, &api_key)?;
