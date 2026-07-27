@@ -121,6 +121,15 @@ git push origin v1.2.3
 
 **Note:** Only tag from `master`.
 
+### Hotfix Releases
+
+If a merged fix corrects a **system-breaking bug** (the tool fails to start, crashes on first run, corrupts data, or is completely unusable for its core purpose), release it immediately as a PATCH without waiting for the 5-fix threshold:
+
+1. Confirm CI is green on `master`.
+2. Bump PATCH: `git tag vX.Y.(Z+1) && git push origin vX.Y.(Z+1)`.
+
+Do not batch a system-breaking fix with other changes — ship it the moment it lands on `master`.
+
 ### Automatic Version Bump Triggers
 
 After every merge to `master`, count commits since the last `v*` tag:
