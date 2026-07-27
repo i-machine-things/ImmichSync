@@ -55,7 +55,7 @@ fn fetch_latest() -> Result<GhRelease> {
 /// Manual, unconditional check (used by `immichsync update check`).
 pub fn check_now() -> Result<Option<UpdateInfo>> {
     let release = fetch_latest()?;
-    let current = version_tuple(env!("CARGO_PKG_VERSION"));
+    let current = version_tuple(env!("IMMICHSYNC_VERSION"));
     if version_tuple(&release.tag_name) > current {
         Ok(Some(UpdateInfo {
             tag: release.tag_name,

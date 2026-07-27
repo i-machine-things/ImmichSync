@@ -62,7 +62,14 @@ Requires Rust (`cargo build --release`). Dependencies: `clap`, `reqwest`
 `walkdir`, `chrono`, `anyhow`, `directories`, `rpassword`.
 
 Releases are built by `.github/workflows/release.yml` on `v*` tags: a `.deb`
-package (via `cargo-deb`) for Linux and an Inno Setup installer for Windows.
+package (via `cargo-deb --deb-version`) for Linux and an Inno Setup installer
+for Windows.
+
+`--version` reports a live `git describe` (e.g. `v1.0.0` exactly at a tagged
+release commit, `v1.0.0-3-gabc1234` for a dev build 3 commits past the last
+tag, `-dirty` appended for uncommitted changes) rather than a static number —
+see `build.rs`. Building from a source tarball with no `.git` directory falls
+back to the version in `Cargo.toml`.
 
 ## License
 

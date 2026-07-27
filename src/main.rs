@@ -53,7 +53,7 @@ fn ensure_config() -> Result<Config> {
 fn cmd_update_check() -> Result<()> {
     match update::check_now()? {
         Some(info) => println!("Update available: {} ({})", info.tag, info.url),
-        None => println!("Up to date (v{}).", env!("CARGO_PKG_VERSION")),
+        None => println!("Up to date ({}).", env!("IMMICHSYNC_VERSION")),
     }
     Ok(())
 }
