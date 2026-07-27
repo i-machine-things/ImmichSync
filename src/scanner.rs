@@ -38,7 +38,11 @@ pub fn walk(root: &Path) -> Result<Vec<FoundFile>> {
         if !entry.file_type().is_file() {
             continue;
         }
-        let meta = entry.metadata()?;
+        let meta = match entry.metadata() {
+            Ok(m) => m,
+            Err(_) if entry.depth() > 0 => continue,
+            Err(e) => return Err(e).with_context(|| format!("walking {}", root.display())),
+        };
         if meta.len() == 0 {
             continue;
         }
