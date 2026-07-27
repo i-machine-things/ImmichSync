@@ -1,0 +1,157 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version string (e.g. v0.1.0-test)'
+        required: false
+        default: 'v0.0.0-test'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-master-ancestry:
+    if: github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify tag is descended from master
+        run: |
+          git fetch origin master
+          if ! git merge-base --is-ancestor origin/master "$GITHUB_SHA"; then
+            echo "ERROR: Tag $GITHUB_REF_NAME is not descended from master. Only tag from master."
+            exit 1
+          fi
+          echo "OK: $GITHUB_REF_NAME is descended from master"
+
+  # ---------------------------------------------------------------------------
+  # Linux — plain release binary packaged as a .deb via cargo-deb, so install
+  # goes through dpkg/apt instead of a bare binary copy.
+  # ---------------------------------------------------------------------------
+  build-linux:
+    needs: verify-master-ancestry
+    if: always() && (needs.verify-master-ancestry.result == 'success' || needs.verify-master-ancestry.result == 'skipped')
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@1.97.1
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: cargo build --release
+        run: cargo build --release
+
+      - name: Install cargo-deb
+        run: cargo install cargo-deb --version 3.7.0 --locked
+
+      - name: Build .deb package
+        run: cargo deb --no-build --deb-version "${RELEASE_VERSION#v}"
+
+      - name: Rename package with release version
+        run: |
+          mkdir -p release-out
+          cp target/debian/*.deb "release-out/immichsync-${RELEASE_VERSION}-linux-amd64.deb"
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: immichsync-linux
+          path: release-out/*.deb
+
+  # ---------------------------------------------------------------------------
+  # Windows — release binary packaged with an Inno Setup installer.
+  # ---------------------------------------------------------------------------
+  build-windows:
+    needs: verify-master-ancestry
+    if: always() && (needs.verify-master-ancestry.result == 'success' || needs.verify-master-ancestry.result == 'skipped')
+    runs-on: windows-latest
+    env:
+      RELEASE_VERSION: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: dtolnay/rust-toolchain@1.97.1
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: cargo build --release
+        run: cargo build --release
+
+      - name: Ensure Inno Setup is available
+        shell: pwsh
+        # Left unpinned intentionally: Chocolatey's package listing couldn't be
+        # verified from this environment, and pinning to a guessed version
+        # number risks a hard failure on every future release build, which is
+        # worse than the reproducibility gap this leaves.
+        run: |
+          if (!(Get-Command iscc -ErrorAction SilentlyContinue)) {
+            choco install innosetup --confirm --no-progress
+          }
+
+      - name: Build Windows installer
+        shell: pwsh
+        run: iscc installers\ImmichSync.iss
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: immichsync-windows
+          path: installer_out/ImmichSync-${{ env.RELEASE_VERSION }}-windows-setup.exe
+
+  # ---------------------------------------------------------------------------
+  # Release — combine both platform artifacts into a single GitHub Release.
+  # ---------------------------------------------------------------------------
+  create-release:
+    needs: [build-linux, build-windows]
+    if: github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: immichsync-linux
+          path: release-assets
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: immichsync-windows
+          path: release-assets
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ImmichSync ${{ github.ref_name }}
+          files: |
+            release-assets/*.deb
+            release-assets/*-windows-setup.exe
+          generate_release_notes: true
+          fail_on_unmatched_files: true

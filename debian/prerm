@@ -1,0 +1,32 @@
+#!/bin/sh
+# Best-effort cleanup of any per-user systemd timer before the binary they
+# point at disappears. Never fails package removal — every step is
+# best-effort, since we're reaching into user sessions from a root-run
+# maintainer script and that can fail for plenty of unrelated reasons
+# (no active session, linger not enabled, etc).
+#
+# The actual disable/rm/daemon-reload runs as the target user (via `runuser`),
+# not as root: ~/.config is entirely user-controlled, and a root-run `rm`
+# following a path through it would follow any symlink a user planted there,
+# letting them redirect root's delete onto a file they couldn't otherwise
+# touch. Running as the user means it can only ever delete what that user
+# already had permission to delete.
+
+if [ "$1" = "remove" ]; then
+    for home in /root /home/*; do
+        [ -d "$home" ] || continue
+        user="$(basename "$home")"
+        timer="$home/.config/systemd/user/immichsync.timer"
+        service="$home/.config/systemd/user/immichsync.service"
+
+        if [ -f "$timer" ] || [ -f "$service" ]; then
+            runuser -l "$user" -c '
+                systemctl --user disable --now immichsync.timer 2>/dev/null
+                rm -f "$HOME/.config/systemd/user/immichsync.timer" "$HOME/.config/systemd/user/immichsync.service"
+                systemctl --user daemon-reload 2>/dev/null
+            ' 2>/dev/null || true
+        fi
+    done
+fi
+
+exit 0
