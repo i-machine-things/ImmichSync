@@ -116,3 +116,5 @@ This note was created based on issues encountered with PyInstaller executables r
 - **Reject root drives as photo directories during setup.** `PathBuf::parent().is_none()`
   identifies `C:\` / `/`. Canonicalize first (resolves `..` and symlinks), but store the
   original path to avoid Windows `\\?\` prefix in config.
+- **Scheduled-task catch-up:** Use `Persistent=true` for systemd or set `StartWhenAvailable` after `schtasks` registration. If the Windows follow-up fails, keep the task and report that catch-up is unavailable.
+- **Windows verification:** Windows-only code requires Windows CI or a cross toolchain; Linux cannot compile-check it directly.
