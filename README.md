@@ -39,6 +39,12 @@ immichsync service uninstall # remove the nightly schedule
 immichsync update check      # check GitHub for a newer release
 ```
 
+If the machine is off or asleep at the scheduled hour, the sync catches up
+the next time it's on rather than silently skipping that day — the systemd
+timer sets `Persistent=true`, and the Windows task gets `StartWhenAvailable`
+set via a PowerShell follow-up step after `schtasks` registers it (neither
+wakes the machine; both just run on next opportunity).
+
 Config lives at the OS-appropriate config dir (e.g. `~/.config/immichsync/config.toml`
 on Linux, `%APPDATA%\immichsync\config.toml` on Windows) with `0600`
 permissions on Unix, since it holds your Immich API key. Sync state (which
