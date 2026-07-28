@@ -93,6 +93,7 @@ This note was created based on issues encountered with PyInstaller executables r
 ## Inno Setup PATH Management
 
 - **When removing a directory from PATH, pad both sides before searching, or better, tokenize and filter.** A search for `;AppDir;` against `EnvPath + ';'` misses the case where `AppDir` is the *first* PATH entry (no leading separator to match). Splitting on `;`, filtering out the matching entry (case-insensitively), and rejoining is more robust than position/padding arithmetic.
+- **Don't chain two quoted-path commands with `&&` inside a `cmd /K "..."` Parameters string.** cmd.exe strips the first and last quote of the whole command line when it starts with a quote — fine for one quoted segment, but a second quoted segment after `&&` gets corrupted, failing with "The filename, directory name, or volume label syntax is incorrect." Prefer avoiding the chain entirely if one command already implies the other (e.g. don't chain `run && service install` when `service install` already runs setup first) — simpler and sidesteps the quoting rule by construction rather than working around it.
 
 ## Rust CLI Patterns
 
