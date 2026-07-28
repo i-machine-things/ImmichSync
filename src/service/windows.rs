@@ -39,9 +39,11 @@ pub fn install(hour: u8) -> Result<()> {
     // matching the systemd timer's Persistent=true on Linux. Doesn't wake
     // the machine — same as the Linux side.
     let ps_script = format!(
-        "$t = Get-ScheduledTask -TaskName '{TASK_NAME}'; \
+        "$ErrorActionPreference = 'Stop'; \
+         $t = Get-ScheduledTask -TaskName '{TASK_NAME}' -ErrorAction Stop; \
+         if ($t -eq $null) {{ throw 'task not found' }}; \
          $t.Settings.StartWhenAvailable = $true; \
-         Set-ScheduledTask -InputObject $t | Out-Null"
+         Set-ScheduledTask -InputObject $t -ErrorAction Stop | Out-Null"
     );
     let ps_status = Command::new("powershell")
         .args(["-NoProfile", "-NonInteractive", "-Command", &ps_script])
