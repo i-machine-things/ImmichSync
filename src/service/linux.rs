@@ -12,21 +12,21 @@ pub fn install(hour: u8) -> Result<()> {
     std::fs::create_dir_all(&dir).with_context(|| format!("creating {}", dir.display()))?;
 
     let service = format!(
-        "[Unit]\nDescription=ImmichSync nightly backup\n\n\
+        "[Unit]\nDescription=ImmichHaul nightly backup\n\n\
          [Service]\nType=oneshot\nExecStart={} run\n",
         exe.display()
     );
     let timer = format!(
-        "[Unit]\nDescription=Run ImmichSync nightly\n\n\
+        "[Unit]\nDescription=Run ImmichHaul nightly\n\n\
          [Timer]\nOnCalendar=*-*-* {hour:02}:00:00\nPersistent=true\n\n\
          [Install]\nWantedBy=timers.target\n"
     );
 
-    std::fs::write(dir.join("immichsync.service"), service)?;
-    std::fs::write(dir.join("immichsync.timer"), timer)?;
+    std::fs::write(dir.join("immich-haul.service"), service)?;
+    std::fs::write(dir.join("immich-haul.timer"), timer)?;
 
     run_systemctl(&["daemon-reload"])?;
-    run_systemctl(&["enable", "--now", "immichsync.timer"])?;
+    run_systemctl(&["enable", "--now", "immich-haul.timer"])?;
 
     println!("Installed systemd user timer: runs daily at {hour:02}:00.");
 
@@ -45,8 +45,8 @@ pub fn install(hour: u8) -> Result<()> {
 
 pub fn uninstall() -> Result<()> {
     let dir = unit_dir()?;
-    let _ = run_systemctl(&["disable", "--now", "immichsync.timer"]);
-    for name in ["immichsync.timer", "immichsync.service"] {
+    let _ = run_systemctl(&["disable", "--now", "immich-haul.timer"]);
+    for name in ["immich-haul.timer", "immich-haul.service"] {
         let path = dir.join(name);
         if path.exists() {
             std::fs::remove_file(&path)?;

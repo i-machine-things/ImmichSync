@@ -1,4 +1,4 @@
-# ImmichSync
+# ImmichHaul
 
 A nightly backup CLI (Rust) that uploads new photos/videos from a local
 directory to a self-hosted [Immich](https://immich.app) server. Files already
@@ -11,17 +11,17 @@ that's already been uploaded manually — nothing gets re-uploaded.
 **Linux** — install is handled entirely by `apt`/`dpkg`, no wrapper script:
 
 ```bash
-curl -fsSLO https://github.com/i-machine-things/ImmichSync/releases/latest/download/immichsync-<version>-linux-amd64.deb
-sudo apt install ./immichsync-<version>-linux-amd64.deb
+curl -fsSLO https://github.com/i-machine-things/ImmichHaul/releases/latest/download/immich-haul-<version>-linux-amd64.deb
+sudo apt install ./immich-haul-<version>-linux-amd64.deb
 ```
 
-**Windows**: download `ImmichSync-<version>-windows-setup.exe` from the
-[latest release](https://github.com/i-machine-things/ImmichSync/releases/latest)
+**Windows**: download `ImmichHaul-<version>-windows-setup.exe` from the
+[latest release](https://github.com/i-machine-things/ImmichHaul/releases/latest)
 and run it. The installer offers to run setup and enable the nightly
 schedule at the end.
 
 Either way, there's no separate setup step to remember: the first time you
-run any command (`immichsync run`, `immichsync status`, `immichsync service
+run any command (`immich-haul run`, `immich-haul status`, `immich-haul service
 install`) with no config yet and a terminal attached, it walks you through
 setup (server URL, API key, photos directory) automatically before
 continuing. Unattended invocations (the nightly timer/scheduled task) fail
@@ -30,13 +30,13 @@ with a clear error instead of hanging on a prompt if setup was never done.
 ## Usage
 
 ```bash
-immichsync init              # (re-)run setup explicitly: server URL, API key, photos dir
-immichsync run --dry-run     # preview a sync without uploading anything
-immichsync run               # sync now (prompts for setup first if not configured yet)
-immichsync status            # show config, log tail
-immichsync service install   # schedule a nightly run (systemd user timer / Task Scheduler)
-immichsync service uninstall # remove the nightly schedule
-immichsync update check      # check GitHub for a newer release
+immich-haul init              # (re-)run setup explicitly: server URL, API key, photos dir
+immich-haul run --dry-run     # preview a sync without uploading anything
+immich-haul run               # sync now (prompts for setup first if not configured yet)
+immich-haul status            # show config, log tail
+immich-haul service install   # schedule a nightly run (systemd user timer / Task Scheduler)
+immich-haul service uninstall # remove the nightly schedule
+immich-haul update check      # check GitHub for a newer release
 ```
 
 If the machine is off or asleep at the scheduled hour, the systemd timer's
@@ -46,15 +46,15 @@ step after `schtasks` registers the task — if that step fails, it logs a
 warning and the task still runs normally, just without catch-up. Neither
 option wakes the machine; both just run on next opportunity.
 
-Config lives at the OS-appropriate config dir (e.g. `~/.config/immichsync/config.toml`
-on Linux, `%APPDATA%\immichsync\config.toml` on Windows) with `0600`
+Config lives at the OS-appropriate config dir (e.g. `~/.config/immich-haul/config.toml`
+on Linux, `%APPDATA%\immich-haul\config.toml` on Windows) with `0600`
 permissions on Unix, since it holds your Immich API key. Sync state (which
 files are already uploaded) and logs live in the OS data dir alongside it.
 
 ## Updates
 
-`immichsync update check` hits GitHub's releases API and prints whether a
-newer version exists. `immichsync run` also does this passively at most once
+`immich-haul update check` hits GitHub's releases API and prints whether a
+newer version exists. `immich-haul run` also does this passively at most once
 every 24h (cached, best-effort — never blocks or fails the sync, and a
 transient network error doesn't suppress the next day's check) and logs a
 one-line note if an update is available.
@@ -69,20 +69,20 @@ directory, so upgrading doesn't touch them.
 
 ## Uninstall
 
-**Linux**: `sudo apt remove immichsync`. The package's `prerm` script
+**Linux**: `sudo apt remove immich-haul`. The package's `prerm` script
 best-effort disables and removes the systemd user timer/service for any user
 that has one installed, so removal doesn't leave a timer pointing at a
 binary that no longer exists. Config/manifest/logs under
-`~/.config/immichsync` and `~/.local/share/immichsync` are left in place —
+`~/.config/immich-haul` and `~/.local/share/immich-haul` are left in place —
 delete them yourself if you want a full wipe.
 
-**Windows**: use "Uninstall ImmichSync" from the Start Menu / Apps list. The
-uninstaller runs `immichsync.exe service uninstall` first (removing the
+**Windows**: use "Uninstall ImmichHaul" from the Start Menu / Apps list. The
+uninstaller runs `immich-haul.exe service uninstall` first (removing the
 scheduled task) and removes the app from PATH. Config/data under
-`%APPDATA%\immichsync` / `%LOCALAPPDATA%\immichsync` are left in place.
+`%APPDATA%\immich-haul` / `%LOCALAPPDATA%\immich-haul` are left in place.
 
 If you just want to stop the nightly runs without removing the app, use
-`immichsync service uninstall` directly on either platform.
+`immich-haul service uninstall` directly on either platform.
 
 ## How it works
 

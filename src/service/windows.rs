@@ -1,7 +1,7 @@
 use anyhow::{Context, Result, bail};
 use std::process::Command;
 
-const TASK_NAME: &str = "ImmichSync";
+const TASK_NAME: &str = "ImmichHaul";
 
 pub fn install(hour: u8) -> Result<()> {
     let exe = std::env::current_exe().context("locating current executable")?;

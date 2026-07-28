@@ -42,7 +42,7 @@ fn ensure_config() -> Result<Config> {
     }
     if !std::io::stdin().is_terminal() {
         anyhow::bail!(
-            "no config found at {} — run `immichsync init` (or any command) from a terminal to set up",
+            "no config found at {} — run `immich-haul init` (or any command) from a terminal to set up",
             config::config_dir()?.join("config.toml").display()
         );
     }
@@ -53,7 +53,7 @@ fn ensure_config() -> Result<Config> {
 fn cmd_update_check() -> Result<()> {
     match update::check_now()? {
         Some(info) => println!("Update available: {} ({})", info.tag, info.url),
-        None => println!("Up to date ({}).", env!("IMMICHSYNC_VERSION")),
+        None => println!("Up to date ({}).", env!("IMMICH_HAUL_VERSION")),
     }
     Ok(())
 }
@@ -127,10 +127,10 @@ fn run_setup_wizard() -> Result<Config> {
 }
 
 fn cmd_init() -> Result<()> {
-    println!("ImmichSync setup\n");
+    println!("ImmichHaul setup\n");
     run_setup_wizard()?;
     println!(
-        "Run `immichsync run --dry-run` to preview a sync, or `immichsync service install` \
+        "Run `immich-haul run --dry-run` to preview a sync, or `immich-haul service install` \
          to schedule nightly backups."
     );
     Ok(())
@@ -183,7 +183,7 @@ fn cmd_status() -> Result<()> {
                 println!("  - {}", d.display());
             }
         }
-        Err(e) => println!("Config not set up yet ({e}). Run `immichsync init`."),
+        Err(e) => println!("Config not set up yet ({e}). Run `immich-haul init`."),
     }
 
     if let Ok(text) = std::fs::read_to_string(&log_path) {

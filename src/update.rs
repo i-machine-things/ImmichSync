@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-const REPO: &str = "i-machine-things/ImmichSync";
+const REPO: &str = "i-machine-things/ImmichHaul";
 const CHECK_INTERVAL: Duration = Duration::from_secs(24 * 3600);
 
 #[derive(Deserialize)]
@@ -37,7 +37,7 @@ fn version_tuple(v: &str) -> (u64, u64, u64) {
 fn fetch_latest() -> Result<GhRelease> {
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(5))
-        .user_agent("immichsync")
+        .user_agent("immich-haul")
         .build()?;
     let resp = client
         .get(format!(
@@ -52,10 +52,10 @@ fn fetch_latest() -> Result<GhRelease> {
     resp.json().context("parsing releases API response")
 }
 
-/// Manual, unconditional check (used by `immichsync update check`).
+/// Manual, unconditional check (used by `immich-haul update check`).
 pub fn check_now() -> Result<Option<UpdateInfo>> {
     let release = fetch_latest()?;
-    let current = version_tuple(env!("IMMICHSYNC_VERSION"));
+    let current = version_tuple(env!("IMMICH_HAUL_VERSION"));
     if version_tuple(&release.tag_name) > current {
         Ok(Some(UpdateInfo {
             tag: release.tag_name,

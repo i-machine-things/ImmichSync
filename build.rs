@@ -2,7 +2,7 @@ use std::process::Command;
 
 fn main() {
     let version = git_describe().unwrap_or_else(|| env!("CARGO_PKG_VERSION").to_string());
-    println!("cargo:rustc-env=IMMICHSYNC_VERSION={version}");
+    println!("cargo:rustc-env=IMMICH_HAUL_VERSION={version}");
 }
 
 /// `git describe` gives an exact tag name when built at a tagged release

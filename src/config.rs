@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 fn project_dirs() -> Result<ProjectDirs> {
-    ProjectDirs::from("", "", "immichsync").context("could not determine home directory")
+    ProjectDirs::from("", "", "immich-haul").context("could not determine home directory")
 }
 
 pub fn config_dir() -> Result<PathBuf> {
@@ -24,7 +24,7 @@ pub fn manifest_path() -> Result<PathBuf> {
 }
 
 pub fn log_path() -> Result<PathBuf> {
-    Ok(data_dir()?.join("immichsync.log"))
+    Ok(data_dir()?.join("immich-haul.log"))
 }
 
 pub fn update_cache_path() -> Result<PathBuf> {
@@ -47,7 +47,7 @@ impl Config {
         let path = config_path()?;
         if !path.exists() {
             bail!(
-                "no config found at {} — run `immichsync init` first",
+                "no config found at {} — run `immich-haul init` first",
                 path.display()
             );
         }

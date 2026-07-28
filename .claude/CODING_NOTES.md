@@ -84,7 +84,7 @@ This note was created based on issues encountered with PyInstaller executables r
 - **Add docstrings to explain code.** Focus on *why* a function/class exists or *why* it does something non-obvious — the code itself already shows *what* it does. A docstring worth writing usually covers intent, assumptions, edge cases, or a gotcha a future reader would otherwise have to rediscover the hard way.
 - **Strip docstrings when building a release.** Release builds don't need internal rationale shipped alongside the binary — it bloats the artifact and can leak implementation notes you didn't mean to publish. Run Python with `-OO` (or an equivalent build step) to drop docstrings and assertions from the compiled output before packaging.
 
-## GitHub Actions Security (CodeRabbit, ImmichSync PR#1)
+## GitHub Actions Security (CodeRabbit, ImmichHaul PR#1)
 
 - **Set `persist-credentials: false` on every `actions/checkout` step** unless that job actually needs to push back to the repo. Otherwise the `GITHUB_TOKEN` sits in the local git config for the rest of the job — unnecessary exposure surface (zizmor's `artipacked` check flags this).
 - **Declare a workflow-level `permissions:` block** (e.g. `contents: read`) so jobs don't implicitly inherit a broader default token scope. Jobs that need more (e.g. `contents: write` to create a release) declare it at the job level, which overrides the top-level default for that job only.
