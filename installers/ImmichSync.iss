@@ -36,8 +36,15 @@ Source: "..\README.md";                     DestDir: "{app}"; Flags: ignoreversi
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 
 [Run]
-Filename: "{cmd}"; \
-    Parameters: "/K ""{app}\{#MyAppExeName}"" run && ""{app}\{#MyAppExeName}"" service install"; \
+; `service install` already runs setup (ensure_config) before installing the
+; schedule — see src/main.rs — so a single command covers both steps.
+; Invoked directly (no cmd.exe wrapper): Windows allocates a console
+; automatically for a console-subsystem exe launched this way, so the
+; interactive wizard still works, and it avoids cmd.exe entirely — no
+; quoting rules to trip over, and no risk of a `/K` shell staying open
+; after the command finishes and blocking the installer's Finish page.
+Filename: "{app}\{#MyAppExeName}"; \
+    Parameters: "service install"; \
     Description: "Run setup now (server URL, API key, photos folder) and enable the nightly schedule"; \
     Flags: postinstall skipifsilent unchecked
 
