@@ -69,12 +69,12 @@ jobs:
       - name: Rename package with release version
         run: |
           mkdir -p release-out
-          cp target/debian/*.deb "release-out/immichsync-${RELEASE_VERSION}-linux-amd64.deb"
+          cp target/debian/*.deb "release-out/immich-haul-${RELEASE_VERSION}-linux-amd64.deb"
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
-          name: immichsync-linux
+          name: immich-haul-linux
           path: release-out/*.deb
 
   # ---------------------------------------------------------------------------
@@ -113,13 +113,13 @@ jobs:
 
       - name: Build Windows installer
         shell: pwsh
-        run: iscc installers\ImmichSync.iss
+        run: iscc installers\ImmichHaul.iss
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: immichsync-windows
-          path: installer_out/ImmichSync-${{ env.RELEASE_VERSION }}-windows-setup.exe
+          name: immich-haul-windows
+          path: installer_out/ImmichHaul-${{ env.RELEASE_VERSION }}-windows-setup.exe
 
   # ---------------------------------------------------------------------------
   # Release — combine both platform artifacts into a single GitHub Release.
@@ -138,18 +138,18 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: immichsync-linux
+          name: immich-haul-linux
           path: release-assets
 
       - uses: actions/download-artifact@v4
         with:
-          name: immichsync-windows
+          name: immich-haul-windows
           path: release-assets
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: ImmichSync ${{ github.ref_name }}
+          name: ImmichHaul ${{ github.ref_name }}
           files: |
             release-assets/*.deb
             release-assets/*-windows-setup.exe

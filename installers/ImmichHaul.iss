@@ -1,8 +1,8 @@
-#define MyAppName "ImmichSync"
+#define MyAppName "ImmichHaul"
 #define MyAppVersion GetEnv("RELEASE_VERSION")
 #define MyAppPublisher "i-machine-things"
-#define MyAppURL "https://github.com/i-machine-things/ImmichSync"
-#define MyAppExeName "immichsync.exe"
+#define MyAppURL "https://github.com/i-machine-things/ImmichHaul"
+#define MyAppExeName "immich-haul.exe"
 #define MyAppId "{{EF081C4A-5F6E-4B02-885A-C5D7D8643100}"
 
 [Setup]
@@ -13,11 +13,11 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={localappdata}\ImmichSync
+DefaultDirName={localappdata}\ImmichHaul
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 OutputDir=..\installer_out
-OutputBaseFilename=ImmichSync-{#MyAppVersion}-windows-setup
+OutputBaseFilename=ImmichHaul-{#MyAppVersion}-windows-setup
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
@@ -29,7 +29,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "..\target\release\immichsync.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\target\release\immich-haul.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README.md";                     DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]

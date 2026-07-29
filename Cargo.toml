@@ -1,5 +1,5 @@
 [package]
-name = "immichsync"
+name = "immich-haul"
 version = "0.1.0"
 edition = "2024"
 description = "Nightly photo backup CLI for Immich"
@@ -41,6 +41,6 @@ section = "utils"
 priority = "optional"
 maintainer-scripts = "debian"
 assets = [
-    ["target/release/immichsync", "usr/bin/", "755"],
-    ["README.md", "usr/share/doc/immichsync/README.md", "644"],
+    ["target/release/immich-haul", "usr/bin/", "755"],
+    ["README.md", "usr/share/doc/immich-haul/README.md", "644"],
 ]

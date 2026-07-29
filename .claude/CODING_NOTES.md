@@ -84,7 +84,7 @@ This note was created based on issues encountered with PyInstaller executables r
 - **Add docstrings to explain code.** Focus on *why* a function/class exists or *why* it does something non-obvious — the code itself already shows *what* it does. A docstring worth writing usually covers intent, assumptions, edge cases, or a gotcha a future reader would otherwise have to rediscover the hard way.
 - **Strip docstrings when building a release.** Release builds don't need internal rationale shipped alongside the binary — it bloats the artifact and can leak implementation notes you didn't mean to publish. Run Python with `-OO` (or an equivalent build step) to drop docstrings and assertions from the compiled output before packaging.
 
-## GitHub Actions Security (CodeRabbit, ImmichSync PR#1)
+## GitHub Actions Security (CodeRabbit, ImmichHaul PR#1)
 
 - **Set `persist-credentials: false` on every `actions/checkout` step** unless that job actually needs to push back to the repo. Otherwise the `GITHUB_TOKEN` sits in the local git config for the rest of the job — unnecessary exposure surface (zizmor's `artipacked` check flags this).
 - **Declare a workflow-level `permissions:` block** (e.g. `contents: read`) so jobs don't implicitly inherit a broader default token scope. Jobs that need more (e.g. `contents: write` to create a release) declare it at the job level, which overrides the top-level default for that job only.
@@ -95,6 +95,13 @@ This note was created based on issues encountered with PyInstaller executables r
 - **When removing a directory from PATH, pad both sides before searching, or better, tokenize and filter.** A search for `;AppDir;` against `EnvPath + ';'` misses the case where `AppDir` is the *first* PATH entry (no leading separator to match). Splitting on `;`, filtering out the matching entry (case-insensitively), and rejoining is more robust than position/padding arithmetic.
 - **Don't chain two quoted-path commands with `&&` inside `cmd /K`.** cmd.exe's leading-quote-stripping can corrupt the second quoted segment after `&&` ("filename, directory name, or volume label syntax is incorrect") — documented cmd.exe behavior, not verified on real Windows.
 - **Prefer invoking the target exe directly over wrapping it in `cmd /K`.** Sidesteps the quoting pitfall by construction, and avoids `/K` leaving a shell open after the command finishes, which can block an Inno Setup installer's Finish page until the user closes it manually.
+
+## Project Rename / Rebrand (CodeRabbit, ImmichHaul PR#7)
+
+- **Don't point repo URLs (Cargo.toml `repository`, `update.rs` REPO const, README download links) at a new project name until the GitHub repo itself is renamed** — they'll 404 against the still-live old repo, and these are baked into a compiled binary or a doc a user acts on immediately. Check with `gh repo view --json nameWithOwner`.
+- **A cosmetic/rarely-hit URL (e.g. an installer's support/update link) can keep the new name if the maintainer confirms the rename+rebuild happens within the same short window** — confirmed on ImmichHaul PR#7 (`i-machine-things`: "rebuild time is less than a min, non-issue"). Don't generalize that waiver to the runtime API endpoint or download links without asking; those stay live far longer.
+- **`gh pr view <n> --comments` does NOT show inline diff review comments** — only the top-level issue/review-summary comments. A human reply to one specific CodeRabbit finding lives in `gh api repos/<owner>/<repo>/pulls/<n>/comments` and is easy to miss otherwise. Always check that endpoint too before treating a finding as unaddressed.
+- **Before assuming a rename is docs-only, check `gh release list`.** If a release already shipped under the old name, real users have old systemd units/scheduled tasks/config paths on disk — add best-effort legacy cleanup (install *and* uninstall paths) plus a migration section in the README, not just a search-and-replace.
 
 ## Rust CLI Patterns
 

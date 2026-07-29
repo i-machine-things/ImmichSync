@@ -1,12 +1,15 @@
 use anyhow::{Context, Result, bail};
 use std::process::Command;
 
-const TASK_NAME: &str = "ImmichSync";
+const TASK_NAME: &str = "ImmichHaul";
+const LEGACY_TASK_NAME: &str = "ImmichSync";
 
 pub fn install(hour: u8) -> Result<()> {
     let exe = std::env::current_exe().context("locating current executable")?;
     let start_time = format!("{hour:02}:00");
     let exe_str = exe.to_string_lossy().to_string();
+
+    remove_legacy_task();
 
     let status = Command::new("schtasks")
         .args([
@@ -62,6 +65,8 @@ pub fn install(hour: u8) -> Result<()> {
 }
 
 pub fn uninstall() -> Result<()> {
+    remove_legacy_task();
+
     let status = Command::new("schtasks")
         .args(["/Delete", "/TN", TASK_NAME, "/F"])
         .status()
@@ -71,4 +76,13 @@ pub fn uninstall() -> Result<()> {
     }
     println!("Removed the '{TASK_NAME}' scheduled task.");
     Ok(())
+}
+
+/// Best-effort removal of the pre-rename "ImmichSync" scheduled task, so
+/// upgrading from an older ImmichSync install doesn't leave two nightly
+/// tasks registered at once.
+fn remove_legacy_task() {
+    let _ = Command::new("schtasks")
+        .args(["/Delete", "/TN", LEGACY_TASK_NAME, "/F"])
+        .status();
 }

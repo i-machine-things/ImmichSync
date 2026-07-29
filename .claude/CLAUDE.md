@@ -6,7 +6,7 @@ You are a senior software developer. These rules override your default behavior.
 
 ## Project Overview
 
-**ImmichSync** — a Rust CLI that runs a nightly backup of a local photos directory to a self-hosted Immich server, uploading only new/changed files (checksum-deduped via Immich's bulk-upload-check API).
+**ImmichHaul** — a Rust CLI that runs a nightly backup of a local photos directory to a self-hosted Immich server, uploading only new/changed files (checksum-deduped via Immich's bulk-upload-check API).
 
 Key files:
 - `src/main.rs` / `src/cli.rs` — CLI entry point and subcommands (`init`, `run`, `status`, `service install/uninstall`)
@@ -102,7 +102,7 @@ Project-specific test instructions:
 - `cargo audit` (security — advisory DB scan of dependencies)
 - `cargo test` (tests)
 - `cargo build --release` (build, matrixed over Linux + Windows targets in CI)
-- Never run `immichsync run` against a real Immich server/API key during development without `--dry-run` — it performs real uploads.
+- Never run `immich-haul run` against a real Immich server/API key during development without `--dry-run` — it performs real uploads.
 
 ## Rule 4: Semantic Versioning
 

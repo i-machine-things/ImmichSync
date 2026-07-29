@@ -87,9 +87,9 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: immichsync-${{ matrix.os }}-pr${{ github.event.pull_request.number }}
+          name: immich-haul-${{ matrix.os }}-pr${{ github.event.pull_request.number }}
           path: |
-            target/release/immichsync
-            target/release/immichsync.exe
+            target/release/immich-haul
+            target/release/immich-haul.exe
           if-no-files-found: error
           retention-days: 7

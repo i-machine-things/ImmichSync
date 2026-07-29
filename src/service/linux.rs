@@ -11,22 +11,24 @@ pub fn install(hour: u8) -> Result<()> {
     let dir = unit_dir()?;
     std::fs::create_dir_all(&dir).with_context(|| format!("creating {}", dir.display()))?;
 
+    remove_legacy_units(&dir);
+
     let service = format!(
-        "[Unit]\nDescription=ImmichSync nightly backup\n\n\
+        "[Unit]\nDescription=ImmichHaul nightly backup\n\n\
          [Service]\nType=oneshot\nExecStart={} run\n",
         exe.display()
     );
     let timer = format!(
-        "[Unit]\nDescription=Run ImmichSync nightly\n\n\
+        "[Unit]\nDescription=Run ImmichHaul nightly\n\n\
          [Timer]\nOnCalendar=*-*-* {hour:02}:00:00\nPersistent=true\n\n\
          [Install]\nWantedBy=timers.target\n"
     );
 
-    std::fs::write(dir.join("immichsync.service"), service)?;
-    std::fs::write(dir.join("immichsync.timer"), timer)?;
+    std::fs::write(dir.join("immich-haul.service"), service)?;
+    std::fs::write(dir.join("immich-haul.timer"), timer)?;
 
     run_systemctl(&["daemon-reload"])?;
-    run_systemctl(&["enable", "--now", "immichsync.timer"])?;
+    run_systemctl(&["enable", "--now", "immich-haul.timer"])?;
 
     println!("Installed systemd user timer: runs daily at {hour:02}:00.");
 
@@ -45,16 +47,28 @@ pub fn install(hour: u8) -> Result<()> {
 
 pub fn uninstall() -> Result<()> {
     let dir = unit_dir()?;
-    let _ = run_systemctl(&["disable", "--now", "immichsync.timer"]);
-    for name in ["immichsync.timer", "immichsync.service"] {
+    let _ = run_systemctl(&["disable", "--now", "immich-haul.timer"]);
+    for name in ["immich-haul.timer", "immich-haul.service"] {
         let path = dir.join(name);
         if path.exists() {
             std::fs::remove_file(&path)?;
         }
     }
+    remove_legacy_units(&dir);
     run_systemctl(&["daemon-reload"])?;
     println!("Removed the systemd user timer.");
     Ok(())
+}
+
+/// Best-effort removal of the pre-rename `immichsync` unit names, so
+/// upgrading from an older ImmichSync install doesn't leave a stale timer
+/// running alongside the new `immich-haul` one (different package name, so
+/// apt/dpkg won't have removed it automatically).
+fn remove_legacy_units(dir: &std::path::Path) {
+    let _ = run_systemctl(&["disable", "--now", "immichsync.timer"]);
+    for name in ["immichsync.timer", "immichsync.service"] {
+        let _ = std::fs::remove_file(dir.join(name));
+    }
 }
 
 fn run_systemctl(args: &[&str]) -> Result<()> {

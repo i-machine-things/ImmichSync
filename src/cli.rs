@@ -2,8 +2,8 @@ use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(
-    name = "immichsync",
-    version = env!("IMMICHSYNC_VERSION"),
+    name = "immich-haul",
+    version = env!("IMMICH_HAUL_VERSION"),
     about = "Nightly photo backup for Immich"
 )]
 pub struct Cli {
