@@ -98,7 +98,9 @@ This note was created based on issues encountered with PyInstaller executables r
 
 ## Project Rename / Rebrand (CodeRabbit, ImmichHaul PR#7)
 
-- **Don't point repo URLs (Cargo.toml `repository`, installer `AppURL`, `update.rs` REPO const, README download links) at a new project name until the GitHub repo itself is renamed** — they'll 404 against the still-live old repo. Check with `gh repo view --json nameWithOwner`.
+- **Don't point repo URLs (Cargo.toml `repository`, `update.rs` REPO const, README download links) at a new project name until the GitHub repo itself is renamed** — they'll 404 against the still-live old repo, and these are baked into a compiled binary or a doc a user acts on immediately. Check with `gh repo view --json nameWithOwner`.
+- **A cosmetic/rarely-hit URL (e.g. an installer's support/update link) can keep the new name if the maintainer confirms the rename+rebuild happens within the same short window** — confirmed on ImmichHaul PR#7 (`i-machine-things`: "rebuild time is less than a min, non-issue"). Don't generalize that waiver to the runtime API endpoint or download links without asking; those stay live far longer.
+- **`gh pr view <n> --comments` does NOT show inline diff review comments** — only the top-level issue/review-summary comments. A human reply to one specific CodeRabbit finding lives in `gh api repos/<owner>/<repo>/pulls/<n>/comments` and is easy to miss otherwise. Always check that endpoint too before treating a finding as unaddressed.
 - **Before assuming a rename is docs-only, check `gh release list`.** If a release already shipped under the old name, real users have old systemd units/scheduled tasks/config paths on disk — add best-effort legacy cleanup (install *and* uninstall paths) plus a migration section in the README, not just a search-and-replace.
 
 ## Rust CLI Patterns
