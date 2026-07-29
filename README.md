@@ -11,12 +11,12 @@ that's already been uploaded manually — nothing gets re-uploaded.
 **Linux** — install is handled entirely by `apt`/`dpkg`, no wrapper script:
 
 ```bash
-curl -fsSLO https://github.com/i-machine-things/ImmichSync/releases/latest/download/immich-haul-<version>-linux-amd64.deb
+curl -fsSLO https://github.com/i-machine-things/ImmichHaul/releases/latest/download/immich-haul-<version>-linux-amd64.deb
 sudo apt install ./immich-haul-<version>-linux-amd64.deb
 ```
 
 **Windows**: download `ImmichHaul-<version>-windows-setup.exe` from the
-[latest release](https://github.com/i-machine-things/ImmichSync/releases/latest)
+[latest release](https://github.com/i-machine-things/ImmichHaul/releases/latest)
 and run it. The installer offers to run setup and enable the nightly
 schedule at the end.
 
