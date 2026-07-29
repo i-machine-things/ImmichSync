@@ -96,6 +96,11 @@ This note was created based on issues encountered with PyInstaller executables r
 - **Don't chain two quoted-path commands with `&&` inside `cmd /K`.** cmd.exe's leading-quote-stripping can corrupt the second quoted segment after `&&` ("filename, directory name, or volume label syntax is incorrect") — documented cmd.exe behavior, not verified on real Windows.
 - **Prefer invoking the target exe directly over wrapping it in `cmd /K`.** Sidesteps the quoting pitfall by construction, and avoids `/K` leaving a shell open after the command finishes, which can block an Inno Setup installer's Finish page until the user closes it manually.
 
+## Project Rename / Rebrand (CodeRabbit, ImmichHaul PR#7)
+
+- **Don't point repo URLs (Cargo.toml `repository`, installer `AppURL`, `update.rs` REPO const, README download links) at a new project name until the GitHub repo itself is renamed** — they'll 404 against the still-live old repo. Check with `gh repo view --json nameWithOwner`.
+- **Before assuming a rename is docs-only, check `gh release list`.** If a release already shipped under the old name, real users have old systemd units/scheduled tasks/config paths on disk — add best-effort legacy cleanup (install *and* uninstall paths) plus a migration section in the README, not just a search-and-replace.
+
 ## Rust CLI Patterns
 
 - **Constrain numeric CLI args to their valid domain with clap's `value_parser!(T).range(..)`**, not just the type's full range — e.g. an "hour of day" field typed `u8` still accepts up to 255 unless explicitly range-limited to `0..=23`.

@@ -11,21 +11,28 @@
 # letting them redirect root's delete onto a file they couldn't otherwise
 # touch. Running as the user means it can only ever delete what that user
 # already had permission to delete.
+#
+# Checks both the current `immich-haul` unit names and the pre-rename
+# `immichsync` names, so removal cleans up correctly regardless of whether
+# this machine was set up before or after the ImmichHaul rename.
 
 if [ "$1" = "remove" ]; then
     for home in /root /home/*; do
         [ -d "$home" ] || continue
         user="$(basename "$home")"
-        timer="$home/.config/systemd/user/immichsync.timer"
-        service="$home/.config/systemd/user/immichsync.service"
 
-        if [ -f "$timer" ] || [ -f "$service" ]; then
-            runuser -l "$user" -c '
-                systemctl --user disable --now immichsync.timer 2>/dev/null
-                rm -f "$HOME/.config/systemd/user/immichsync.timer" "$HOME/.config/systemd/user/immichsync.service"
-                systemctl --user daemon-reload 2>/dev/null
-            ' 2>/dev/null || true
-        fi
+        for name in immich-haul immichsync; do
+            timer="$home/.config/systemd/user/$name.timer"
+            service="$home/.config/systemd/user/$name.service"
+
+            if [ -f "$timer" ] || [ -f "$service" ]; then
+                runuser -l "$user" -c '
+                    systemctl --user disable --now '"$name"'.timer 2>/dev/null
+                    rm -f "$HOME/.config/systemd/user/'"$name"'.timer" "$HOME/.config/systemd/user/'"$name"'.service"
+                    systemctl --user daemon-reload 2>/dev/null
+                ' 2>/dev/null || true
+            fi
+        done
     done
 fi
 

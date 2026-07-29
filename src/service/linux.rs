@@ -11,6 +11,8 @@ pub fn install(hour: u8) -> Result<()> {
     let dir = unit_dir()?;
     std::fs::create_dir_all(&dir).with_context(|| format!("creating {}", dir.display()))?;
 
+    remove_legacy_units(&dir);
+
     let service = format!(
         "[Unit]\nDescription=ImmichHaul nightly backup\n\n\
          [Service]\nType=oneshot\nExecStart={} run\n",
@@ -52,9 +54,21 @@ pub fn uninstall() -> Result<()> {
             std::fs::remove_file(&path)?;
         }
     }
+    remove_legacy_units(&dir);
     run_systemctl(&["daemon-reload"])?;
     println!("Removed the systemd user timer.");
     Ok(())
+}
+
+/// Best-effort removal of the pre-rename `immichsync` unit names, so
+/// upgrading from an older ImmichSync install doesn't leave a stale timer
+/// running alongside the new `immich-haul` one (different package name, so
+/// apt/dpkg won't have removed it automatically).
+fn remove_legacy_units(dir: &std::path::Path) {
+    let _ = run_systemctl(&["disable", "--now", "immichsync.timer"]);
+    for name in ["immichsync.timer", "immichsync.service"] {
+        let _ = std::fs::remove_file(dir.join(name));
+    }
 }
 
 fn run_systemctl(args: &[&str]) -> Result<()> {
