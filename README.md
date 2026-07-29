@@ -11,12 +11,12 @@ that's already been uploaded manually — nothing gets re-uploaded.
 **Linux** — install is handled entirely by `apt`/`dpkg`, no wrapper script:
 
 ```bash
-curl -fsSLO https://github.com/i-machine-things/ImmichHaul/releases/latest/download/immich-haul-<version>-linux-amd64.deb
+curl -fsSLO https://github.com/i-machine-things/ImmichSync/releases/latest/download/immich-haul-<version>-linux-amd64.deb
 sudo apt install ./immich-haul-<version>-linux-amd64.deb
 ```
 
 **Windows**: download `ImmichHaul-<version>-windows-setup.exe` from the
-[latest release](https://github.com/i-machine-things/ImmichHaul/releases/latest)
+[latest release](https://github.com/i-machine-things/ImmichSync/releases/latest)
 and run it. The installer offers to run setup and enable the nightly
 schedule at the end.
 
@@ -66,6 +66,29 @@ installer the same way as the initial install (re-running `apt install
 ./newfile.deb` upgrades in place; re-running the Windows installer does the
 same). Your config, sync manifest, and logs live outside the install
 directory, so upgrading doesn't touch them.
+
+## Migrating from an ImmichSync install
+
+Releases up through v0.1.2 shipped as `immichsync`/`ImmichSync`. The package
+name, binary, and state paths all changed with the rename to ImmichHaul, so
+upgrading isn't a plain in-place update:
+
+- **Linux**: `sudo apt remove immichsync` first (different package name, so
+  `apt install` won't replace it), then install `immich-haul` as above. To
+  keep your API key and sync state instead of running setup again, move
+  `~/.config/immichsync` to `~/.config/immich-haul` and
+  `~/.local/share/immichsync` to `~/.local/share/immich-haul` before the
+  first run.
+- **Windows**: uninstall "ImmichSync" from the Start Menu / Apps list first,
+  then install ImmichHaul as above. Move `%APPDATA%\immichsync` to
+  `%APPDATA%\immich-haul` and `%LOCALAPPDATA%\immichsync` to
+  `%LOCALAPPDATA%\immich-haul` to keep your existing config/state.
+
+If you skip the manual cleanup, `immich-haul service install` still
+best-effort removes a leftover `immichsync` timer/scheduled task so you don't
+end up with both the old and new nightly job running at once — you'll just be
+prompted through setup again since the old config isn't read from its old
+path.
 
 ## Uninstall
 

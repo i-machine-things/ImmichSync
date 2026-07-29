@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-const REPO: &str = "i-machine-things/ImmichHaul";
+const REPO: &str = "i-machine-things/ImmichSync";
 const CHECK_INTERVAL: Duration = Duration::from_secs(24 * 3600);
 
 #[derive(Deserialize)]

@@ -1,7 +1,7 @@
 #define MyAppName "ImmichHaul"
 #define MyAppVersion GetEnv("RELEASE_VERSION")
 #define MyAppPublisher "i-machine-things"
-#define MyAppURL "https://github.com/i-machine-things/ImmichHaul"
+#define MyAppURL "https://github.com/i-machine-things/ImmichSync"
 #define MyAppExeName "immich-haul.exe"
 #define MyAppId "{{EF081C4A-5F6E-4B02-885A-C5D7D8643100}"
 
